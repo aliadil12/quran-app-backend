@@ -20,13 +20,14 @@ const app = express();
 const server = http.createServer(app); // Crear servidor HTTP
 
 // Middleware
-app.use(cors({
-  origin: '*',  // سيسمح بالاتصال من أي مصدر أثناء الاختبار
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(logger);
+
+// Agregar punto de verificación de salud (health check) para mantener el servicio activo
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', time: new Date().toISOString() });
+});
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -56,7 +57,7 @@ app.use(errorHandler);
 // Configurar servicio WebSocket
 const io = setupWebSocketServer(server);
 
-const PORT = config.port || 5000;
+const PORT = process.env.PORT || 5000;
 
 // Usar servidor HTTP 
 server.listen(PORT, () => {
@@ -67,5 +68,6 @@ server.listen(PORT, () => {
 process.on('unhandledRejection', (err) => {
   console.log('UNHANDLED REJECTION! 💥 Shutting down...');
   console.log(err.name, err.message);
-  process.exit(1);
+  // تعديل هنا: بدلاً من إغلاق التطبيق، نسمح له بالاستمرار في التشغيل
+  console.log('Server will continue running despite the error');
 });
